@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -19,15 +20,18 @@ type Quiz struct {
 }
 
 func main() {
-	quiz, err := loadProblems()
+	csvFileName := flag.String("csv", "problems.csv", "A csv file in format of question,answer")
+	flag.Parse()
+
+	quiz, err := loadProblems(*csvFileName)
 
 	if err == nil {
 		askQuiz(quiz)
 	}
 }
 
-func loadProblems() (*Quiz, error) {
-	file, err := os.Open("problems.csv")
+func loadProblems(fileName string) (*Quiz, error) {
+	file, err := os.Open(fileName)
 	var quiz *Quiz
 
 	if err != nil {
