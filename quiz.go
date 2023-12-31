@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 type Problem struct {
@@ -65,13 +66,13 @@ func askQuiz(quiz *Quiz) {
 
 	for _, problem := range quiz.problems {
 		var ans string
-		fmt.Print(problem.question, " = ")
+		fmt.Printf("%s = ", problem.question)
 		_, _ = fmt.Scanln(&ans)
 
-		if problem.answer == ans {
+		if strings.EqualFold(strings.TrimSpace(problem.answer), strings.TrimSpace(ans)) {
 			quiz.totalScore++
 		}
 	}
 
-	fmt.Println("Out of: ", len(quiz.problems), ", your total is: ", quiz.totalScore)
+	fmt.Printf("Out of %d questions, your got %d correct", len(quiz.problems), quiz.totalScore)
 }
