@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type Problem struct {
@@ -20,17 +21,19 @@ type Quiz struct {
 }
 
 func main() {
-	csvFileName := flag.String("csv", "problems.csv", "A csv file in format of question,answer")
+	csvFileName := flag.String("csv", "problems.csv", "A csv file in format of question,answer (default = problem.csv)")
+	timeLimit := flag.Int("limit", 30, "Time limit of the quiz in seconds (default = 30)")
 	flag.Parse()
 
-	quiz, err := loadProblems(*csvFileName)
+	quiz, err := loadQuiz(*csvFileName)
 
 	if err == nil {
-		askQuiz(quiz)
+		startQuiz(timeLimit, quiz)
+		fmt.Printf("\nOut of %d questions, your got %d correct\n", len(quiz.problems), quiz.totalScore)
 	}
 }
 
-func loadProblems(fileName string) (*Quiz, error) {
+func loadQuiz(fileName string) (*Quiz, error) {
 	file, err := os.Open(fileName)
 	var quiz *Quiz
 
@@ -65,7 +68,22 @@ func loadProblems(fileName string) (*Quiz, error) {
 	return quiz, nil
 }
 
-func askQuiz(quiz *Quiz) {
+func startQuiz(timeLimit *int, quiz *Quiz) {
+	fmt.Printf("You will have %d seconds to answer all questions", *timeLimit)
+	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
+
+	scoreChan := make(chan int)
+	go askQuestions(quiz, scoreChan)
+
+	select {
+	case <-timer.C:
+		fmt.Println("Oops it seams the time ended")
+	case <-scoreChan:
+		fmt.Println("Well done you answer all questions")
+	}
+}
+
+func askQuestions(quiz *Quiz, scoreChan chan int) {
 	fmt.Println("Answer the following questions")
 
 	for _, problem := range quiz.problems {
@@ -78,5 +96,5 @@ func askQuiz(quiz *Quiz) {
 		}
 	}
 
-	fmt.Printf("Out of %d questions, your got %d correct", len(quiz.problems), quiz.totalScore)
+	scoreChan <- quiz.totalScore
 }
