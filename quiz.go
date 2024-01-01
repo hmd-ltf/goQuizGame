@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -23,9 +24,10 @@ type Quiz struct {
 func main() {
 	csvFileName := flag.String("csv", "problems.csv", "A csv file in format of question,answer (default = problem.csv)")
 	timeLimit := flag.Int("limit", 30, "Time limit of the quiz in seconds (default = 30)")
+	shuffle := flag.Bool("shuffle", false, "Shuffle the questions in random order (default = false)")
 	flag.Parse()
 
-	quiz, err := loadQuiz(*csvFileName)
+	quiz, err := loadQuiz(*csvFileName, *shuffle)
 
 	if err == nil {
 		startQuiz(timeLimit, quiz)
@@ -33,7 +35,7 @@ func main() {
 	}
 }
 
-func loadQuiz(fileName string) (*Quiz, error) {
+func loadQuiz(fileName string, shuffleProblems bool) (*Quiz, error) {
 	file, err := os.Open(fileName)
 	var quiz *Quiz
 
@@ -63,9 +65,23 @@ func loadQuiz(fileName string) (*Quiz, error) {
 		problems = append(problems, &Problem{eachRecord[0], eachRecord[1]})
 	}
 
+	if shuffleProblems {
+		shuffleArray(problems)
+	}
+
 	quiz = &Quiz{problems, 0}
 
 	return quiz, nil
+}
+
+func shuffleArray(problems []*Problem) {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	// Fisher-Yates shuffle algorithm
+	for i := len(problems) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		problems[i], problems[j] = problems[j], problems[i]
+	}
 }
 
 func startQuiz(timeLimit *int, quiz *Quiz) {
