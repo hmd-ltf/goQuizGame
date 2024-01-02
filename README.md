@@ -1,4 +1,6 @@
-# Just a simple quiz game
+# A simple quiz app
+
+Takes the problems in a csv file in the format of question,answer. Also has a time.
 
 ## Accepts the folowing arguments
 
