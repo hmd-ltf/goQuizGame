@@ -21,22 +21,31 @@ type Quiz struct {
 	totalScore int
 }
 
+var (
+	csvFileName string
+	timeLimit   int
+	shuffle     bool
+)
+
+func init() {
+	flag.StringVar(&csvFileName, "csv", "problems.csv", "A csv file in format of question,answer (default = problem.csv)")
+	flag.IntVar(&timeLimit, "limit", 30, "Time limit of the quiz in seconds (default = 30)")
+	flag.BoolVar(&shuffle, "shuffle", false, "Shuffle the questions in random order (default = false)")
+}
+
 func main() {
-	csvFileName := flag.String("csv", "problems.csv", "A csv file in format of question,answer (default = problem.csv)")
-	timeLimit := flag.Int("limit", 30, "Time limit of the quiz in seconds (default = 30)")
-	shuffle := flag.Bool("shuffle", false, "Shuffle the questions in random order (default = false)")
 	flag.Parse()
 
-	quiz, err := loadQuiz(*csvFileName, *shuffle)
+	quiz, err := loadQuiz()
 
 	if err == nil {
-		startQuiz(timeLimit, quiz)
+		startQuiz(quiz)
 		fmt.Printf("\nOut of %d questions, your got %d correct\n", len(quiz.problems), quiz.totalScore)
 	}
 }
 
-func loadQuiz(fileName string, shuffleProblems bool) (*Quiz, error) {
-	file, err := os.Open(fileName)
+func loadQuiz() (*Quiz, error) {
+	file, err := os.Open(csvFileName)
 	var quiz *Quiz
 
 	if err != nil {
@@ -65,7 +74,7 @@ func loadQuiz(fileName string, shuffleProblems bool) (*Quiz, error) {
 		problems = append(problems, &Problem{eachRecord[0], eachRecord[1]})
 	}
 
-	if shuffleProblems {
+	if shuffle {
 		shuffleArray(problems)
 	}
 
@@ -84,9 +93,9 @@ func shuffleArray(problems []*Problem) {
 	}
 }
 
-func startQuiz(timeLimit *int, quiz *Quiz) {
-	fmt.Printf("You will have %d seconds to answer all questions", *timeLimit)
-	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
+func startQuiz(quiz *Quiz) {
+	fmt.Printf("You will have %d seconds to answer all questions", timeLimit)
+	timer := time.NewTimer(time.Duration(timeLimit) * time.Second)
 
 	scoreChan := make(chan int)
 	go askQuestions(quiz, scoreChan)
